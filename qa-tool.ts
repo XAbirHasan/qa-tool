@@ -3,6 +3,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as dotenv from "dotenv";
 import { Octokit } from "@octokit/core";
+import { promises as fsp } from 'fs';
+import { join } from 'path';
 
 // Promisify exec for asynchronous use
 const execAsync = promisify(exec);
@@ -23,7 +25,7 @@ class OctokitClient {
     this.octokit = new Octokit({ auth: token });
   }
 
-  async getPullRequestsForCommit(commitSha: string, owner: string, repo: string): Promise<any[]> {
+  async getPullRequestsForCommit(commitSha: string, owner: string, repo: string) {
     try {
       const response = await this.octokit.request('GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls', {
         owner,
@@ -119,7 +121,7 @@ function extractPRDetails(prBody: string): Record<string, string> {
 }
 
 // Function to report on the differences between branches
-async function reportOnBranch(args: string[]): Promise<void> {
+async function reportOnBranch(args: string[]) {
   if (args.length !== 2 || args.includes('--help')) {
     console.error('Usage: qa-tool report-branch <sourceBranch> <targetBranch>');
     exit(1);
@@ -127,11 +129,12 @@ async function reportOnBranch(args: string[]): Promise<void> {
 
   const [sourceBranch, targetBranch] = args;
   const commits = await listCommitsNotInBranch(sourceBranch, targetBranch);
-
   console.log(`Commits on ${sourceBranch} that are not in ${targetBranch}: (total: ${commits.length})`);
-  console.log(commits);
+  
+  // Prepare markdown file path
+  const markdownFilePath = join(__dirname, 'branch_report.md');
+  let markdownContent = `# Pull Request Report for ${sourceBranch}\n\n`;
 
-  // Fetch associated pull requests for each commit
   const octokit = new OctokitClient(GITHUB_TOKEN);
   const uniquePrs = new Map<number, any>();
 
@@ -147,14 +150,24 @@ async function reportOnBranch(args: string[]): Promise<void> {
 
   uniquePrs.forEach(pr => {
     const prDetails = extractPRDetails(pr.body);
-    console.log(`[#${pr.number}](${pr.html_url}): ${pr.title}`);
-    console.log(`Type: ${prDetails.type}`);
-    console.log(`Changelog: ${prDetails.changelog}`);
-    console.log(`Risk: ${prDetails.risk}`);
-    console.log(`Follow Up: ${prDetails.follow_up}`);
-    console.log();
+
+    // Append PR details to markdown content
+    markdownContent += `## [#${pr.number}](${pr.html_url}): ${pr.title}\n`;
+    markdownContent += `### Type:\n ${prDetails.type}\n`;
+    markdownContent += `### Changelog:\n ${prDetails.changelog}\n`;
+    markdownContent += `### Risk:\n ${prDetails.risk}\n`;
+    markdownContent += `### Follow Up:\n ${prDetails.follow_up}\n\n`;
   });
+
+  // Write markdown content to the file
+  try {
+    await fsp.writeFile(markdownFilePath, markdownContent, 'utf8');
+    console.log(`Pull request report has been written to ${markdownFilePath}`);
+  } catch (error) {
+    console.error('Failed to write markdown file:', error);
+  }
 }
+
 
 type CommandFn = (args: string[]) => Promise<void>;
 
