@@ -120,7 +120,17 @@ function extractPRDetails(prBody: string): Record<string, string> {
   return sections;
 }
 
-// Function to report on the differences between branches
+function updateProgressBar(current: number, total: number) {
+  const barLength = 40; // Adjust this length to fit your terminal size
+  const progress = Math.round((current / total) * barLength);
+  const progressBar = '='.repeat(progress) + '-'.repeat(barLength - progress);
+  const percentage = ((current / total) * 100).toFixed(2);
+  process.stdout.write(`\rProgress: [${progressBar}] ${percentage}% (${current}/${total} commits processed)`);
+  if (current === total) {
+    console.log('\nSuccessfully processed all commits!');
+  }
+}
+
 async function reportOnBranch(args: string[]) {
   if (args.length !== 2 || args.includes('--help')) {
     console.error('Usage: qa-tool report-branch <sourceBranch> <targetBranch>');
@@ -130,7 +140,7 @@ async function reportOnBranch(args: string[]) {
   const [sourceBranch, targetBranch] = args;
   const commits = await listCommitsNotInBranch(sourceBranch, targetBranch);
   console.log(`Commits on ${sourceBranch} that are not in ${targetBranch}: (total: ${commits.length})`);
-  
+
   // Prepare markdown file path
   const markdownFilePath = join(__dirname, 'branch_report.md');
   let markdownContent = `# Pull Request Report for ${sourceBranch}\n\n`;
@@ -138,7 +148,9 @@ async function reportOnBranch(args: string[]) {
   const octokit = new OctokitClient(GITHUB_TOKEN);
   const uniquePrs = new Map<number, any>();
 
-  for (const commit of commits) {
+  // Start processing commits
+  for (let i = 0; i < commits.length; i++) {
+    const commit = commits[i];
     const prs = await octokit.getPullRequestsForCommit(commit.hash, REPO_OWNER, REPO_NAME);
 
     for (const pr of prs) {
@@ -146,6 +158,9 @@ async function reportOnBranch(args: string[]) {
         uniquePrs.set(pr.number, pr);
       }
     }
+
+    // Update the progress bar after each commit is processed
+    updateProgressBar(i + 1, commits.length);
   }
 
   uniquePrs.forEach(pr => {
@@ -161,6 +176,7 @@ async function reportOnBranch(args: string[]) {
 
   // Write markdown content to the file
   try {
+    console.log('Writing pull request report to markdown file...');
     await fsp.writeFile(markdownFilePath, markdownContent, 'utf8');
     console.log(`Pull request report has been written to ${markdownFilePath}`);
   } catch (error) {
