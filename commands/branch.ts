@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import { exit, chdir } from 'process';
 import { join } from 'path';
 import * as dotenv from "dotenv";
-import { OctokitClient } from '../utils/gitClient';
+import { OctokitClient, PullRequest } from '../utils/gitClient';
 import { checkEnvVar, extractPRDetails, progressBar, writeOnFile } from '../utils/misc';
 
 // Load environment variables from .env
@@ -49,7 +49,7 @@ const getUniquePRs = async (
   git: { token: string, repoOwner: string, repoName: string },
 ) => {
   const octokit = new OctokitClient(git.token);
-  const uniquePrs = new Map<number, any>();
+  const uniquePrs = new Map<number, PullRequest>();
 
   for (let i = 0; i < commits.length; i++) {
     const commit = commits[i];
@@ -58,7 +58,6 @@ const getUniquePRs = async (
     for (const pr of prs) {
       if (!uniquePrs.has(pr.number)) {
         uniquePrs.set(pr.number, pr);
-        pr._links
       }
     }
 
@@ -149,7 +148,7 @@ export async function branchPRsReport(args: string[]) {
   const markdownFilePath = customPath || join(__dirname, 'branch_report.md');
   let markdownContent = `## Pull Request Report for ${targetBranch}\n\n`;
   uniquePrs.forEach(pr => {
-    const prDetails = extractPRDetails(pr.body);
+    const prDetails = extractPRDetails(pr.body ?? '');
 
     const mdTitle = noUrl ? `#${pr.number}: ${pr.title}` : `[#${pr.number}](${pr.html_url}): ${pr.title}`;
     // Append PR details to markdown content
