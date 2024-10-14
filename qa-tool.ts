@@ -94,30 +94,32 @@ function extractPRDetailsNormal(prBody: string): Record<string, string> {
   return sections;
 }
 
-// Function to extract PR details using defined markers
-function extractPRDetails(prBody: string): Record<string, string> {
-  const sections: Record<string, string> = {
-    type: '',
-    changelog: '',
-    risk: '',
-    follow_up: ''
+/*
+  Function to extract PR details from the PR body using commented markers.
+  This may vary based on the PR template used in the repository.
+*/
+function extractPRDetails(prTemplate: string) {
+  const extractAfterMarker = (startMarker: string, endMarker: string) => {
+    const startIndex = prTemplate.indexOf(startMarker);
+    if (startIndex === -1) return '';
+
+    const endIndex = prTemplate.indexOf(endMarker, startIndex);
+    if (endIndex === -1) return '';
+
+    // Get the text between markers and remove the marker line
+    const section = prTemplate.slice(startIndex + startMarker.length, endIndex);
+
+    // Split by lines and remove the first line (marker line)
+    const sectionLines = section.split('\n').slice(1).join('\n').trim();
+    return sectionLines;
   };
 
-  const extractSection = (startMarker: string, endMarker: string): string => {
-    const startIndex = prBody.indexOf(startMarker);
-    const endIndex = prBody.indexOf(endMarker);
-    if (startIndex !== -1 && endIndex !== -1) {
-      return prBody.substring(startIndex + startMarker.length, endIndex).trim();
-    }
-    return '';
+  return {
+    type: extractAfterMarker('<!-- type -->', '##'),
+    changelog: extractAfterMarker('<!-- changelog -->', '##'),
+    risk: extractAfterMarker('<!-- risk -->', '##'),
+    follow_up: extractAfterMarker('<!-- follow_up -->', '##')
   };
-
-  sections.type = extractSection('<!-- START type -->', '<!-- END type -->');
-  sections.changelog = extractSection('<!-- START changelog -->', '<!-- END changelog -->');
-  sections.risk = extractSection('<!-- START risk -->', '<!-- END risk -->');
-  sections.follow_up = extractSection('<!-- START follow_up -->', '<!-- END follow_up -->');
-
-  return sections;
 }
 
 function updateProgressBar(current: number, total: number) {

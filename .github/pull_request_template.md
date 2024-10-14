@@ -5,16 +5,13 @@ Closes #____
   - [ ] deployed before this one: #____ / none
   - [ ] merged before this one: #____ / none
 
-## Specify which kind of change this PR introduces (keep applicable)
-<!-- START type -->
+<!-- Do not remove the comments. Those are useful for data extraction. e.g: qa-tool -->
+## <!-- type -->Specify which kind of change this PR introduces (keep applicable)
+
 - [ ] Bugfix / Improvement / New feature / Refactor / Infrastructure / Other (please specify)
-<!-- END type -->
 
-
-## How would you describe the changes in the customer visible changelog (1-2 lines)?
-<!-- START changelog -->
+## <!-- changelog -->How would you describe the changes in the customer visible changelog (1-2 lines)?
 Description / no user visible changes
-<!-- END changelog -->
 
 ## What was done
 
@@ -32,25 +29,23 @@ Approved PRs that have no QA_needed label are considered production ready with n
 
 Please assess risk & follow up on deployment of this PR.
 
+<!-- risk -->
 - [ ] Risk assessment: (remove not relevant and add notes)
-
-<!-- START risk -->
  * Can not be easily reverted
  * Changes not covered by automated tests
  * Can break backwards compatibility
  * Touches central functionality
  * Feels risky
  * Non-trivial changes
-<!-- END risk -->
 
 ## Reviewer Notes
 
-- [ ] Approved and tested according to https://github.com/Mjoll/mimir/wiki/Review-checklist
+- [ ] Approved and tested according to link
 
-## Deploy follow up
-<!-- START follow_up -->
+## <!-- follow_up -->Deploy follow up
+
 - [ ] Follow up deploy tasks are described here if needed. Describe if tasks need to be performed before or after the deploy and the urgency/timing of them, if relevant.
-<!-- END follow_up -->
+
 ## QA - if regression testing was requested:
 
 - [ ] QA has verified or no QA_needed label was present
