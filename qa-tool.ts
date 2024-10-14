@@ -40,58 +40,29 @@ class OctokitClient {
   }
 }
 
-// Function to list commits present in sourceBranch but not in targetBranch
-async function listCommitsNotInBranch(sourceBranch: string, targetBranch: string): Promise<{ hash: string, message: string }[]> {
+type Commit = { hash: string, message: string };
+
+/**
+ * @returns a list of commits that are in the source branch but not in the target branch.
+ * @example
+ * ```
+ *  A---B---C (targetBranch)
+ *           \
+ *            D---E---F (sourceBranch)
+ * 
+ * listCommitsNotInBranch(sourceBranch, targetBranch) => [D, E, F];
+ * ```
+ */
+async function listCommitsNotInBranch(sourceBranch: string, targetBranch: string): Promise<Commit[]> {
   const cmd = `git log --oneline ${targetBranch}..${sourceBranch}`;
   const { stdout } = await execAsync(cmd);
 
-  return stdout
-    .split('\n')
+  return stdout.split('\n')
     .filter(Boolean)
     .map(line => {
       const [hash, ...messageParts] = line.split(' ');
       return { hash, message: messageParts.join(' ') };
     });
-}
-
-// Function to extract PR details in normal format from the PR body
-function extractPRDetailsNormal(prBody: string): Record<string, string> {
-  const lines = prBody.split('\n');
-  const sections: Record<string, string> = {
-    type: '',
-    changelog: '',
-    risk: '',
-    follow_up: '',
-  };
-
-  let currentSection: keyof typeof sections | null = null;
-
-  for (const line of lines) {
-    const lowerCaseLine = line.toLowerCase();
-
-    if (lowerCaseLine.includes('specify which kind of change this pr introduces')) {
-      currentSection = 'type';
-    } else if (lowerCaseLine.includes('how would you describe the changes in the customer visible changelog')) {
-      currentSection = 'changelog';
-    } else if (lowerCaseLine.includes('risks')) {
-      currentSection = 'risk';
-    } else if (lowerCaseLine.includes('deploy follow up')) {
-      currentSection = 'follow_up';
-    } else if (lowerCaseLine.startsWith('##')) {
-      currentSection = null;
-    }
-
-    if (currentSection && !lowerCaseLine.startsWith('##')) {
-      sections[currentSection] += line.trim() + ' ';
-    }
-  }
-
-  // Trim any trailing spaces
-  for (const key in sections) {
-    sections[key as keyof typeof sections] = sections[key as keyof typeof sections].trim();
-  }
-
-  return sections;
 }
 
 /*
@@ -122,11 +93,15 @@ function extractPRDetails(prTemplate: string) {
   };
 }
 
-function updateProgressBar(current: number, total: number) {
+function progressBar(current: number, total: number) {
   const barLength = 40; // Adjust this length to fit your terminal size
   const progress = Math.round((current / total) * barLength);
-  const progressBar = '='.repeat(progress) + '-'.repeat(barLength - progress);
+
+  const filledBar = '='.repeat(progress);
+  const emptyBar = '-'.repeat(barLength - progress);
+  const progressBar = `${filledBar}${emptyBar}`;
   const percentage = ((current / total) * 100).toFixed(2);
+
   process.stdout.write(`\rProgress: [${progressBar}] ${percentage}% (${current}/${total} commits processed)`);
   if (current === total) {
     console.log('\nSuccessfully processed all commits!');
@@ -162,7 +137,7 @@ async function reportOnBranch(args: string[]) {
     }
 
     // Update the progress bar after each commit is processed
-    updateProgressBar(i + 1, commits.length);
+    progressBar(i + 1, commits.length);
   }
 
   uniquePrs.forEach(pr => {
@@ -186,14 +161,11 @@ async function reportOnBranch(args: string[]) {
   }
 }
 
-
 type CommandFn = (args: string[]) => Promise<void>;
-
 const commands: Record<string, CommandFn> = {
   'report-branch': reportOnBranch,
 };
 
-// Helper to print available commands
 function printUsage(): void {
   console.log('Usage: qa-tool <cmd> [args...]');
   console.log();
@@ -205,7 +177,6 @@ function printUsage(): void {
   console.log('Run "qa-tool <cmd> --help" for details.');
 }
 
-// Helper to check required environment variables
 function checkEnvVar(name: string): void {
   if (!process.env[name]) {
     console.error(`Missing required environment variable: ${name}`);
@@ -219,7 +190,6 @@ function checkRequiredEnvVars(): void {
   checkEnvVar('GITHUB_TOKEN');
 }
 
-// Main function to execute the selected command
 async function main(args: string[]): Promise<void> {
   if (args.length === 0) {
     printUsage();
