@@ -49,5 +49,7 @@ npx tsx qa-tool.ts branch-prs-report feature-branch main --simple --no-url --pat
 
 This generates a simple report of pull requests from `feature-branch` not in `main`, excluding PR URLs, and saves it to `./reports/main-branch-report.md`.
 
-# qa-tool
-QA tool example
+## License
+
+Licensed under the MIT License. See the [LICENSE](LICENSE-MIT) file for details.
+
