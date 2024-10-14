@@ -20,6 +20,7 @@ Create a `.env` file in your project's root with:
 REPO_OWNER=your-repo-owner
 REPO_NAME=your-repo-name
 GITHUB_TOKEN=your-github-token
+GIT_ROOT_DIR=your-git-root-dir
 ```
 
 ## Commands

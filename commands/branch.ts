@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { exit } from 'process';
+import { exit, chdir } from 'process';
 import { join } from 'path';
 import * as dotenv from "dotenv";
 import { OctokitClient } from '../utils/gitClient';
@@ -11,6 +11,8 @@ dotenv.config();
 
 // Promisify exec for asynchronous use
 const execAsync = promisify(exec);
+
+const GIT_ROOT_DIR = process.env.GIT_ROOT_DIR || process.cwd(); // Default to current working directory
 
 // GitHub configuration from environment variables
 const REPO_OWNER = process.env.REPO_OWNER || '';
@@ -56,6 +58,7 @@ const getUniquePRs = async (
     for (const pr of prs) {
       if (!uniquePrs.has(pr.number)) {
         uniquePrs.set(pr.number, pr);
+        pr._links
       }
     }
 
@@ -118,6 +121,16 @@ export async function branchPRsReport(args: string[]) {
         console.log('Error: --path option requires a file path.');
         exit(1);
       }
+    }
+  }
+
+  // Change to the Git root directory if specified
+  if (GIT_ROOT_DIR !== process.cwd()) {
+    try {
+      chdir(GIT_ROOT_DIR);
+    } catch (error) {
+      console.error(`Failed to change directory to ${GIT_ROOT_DIR}:`, error);
+      exit(1);
     }
   }
 
