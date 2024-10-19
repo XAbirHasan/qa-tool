@@ -1,0 +1,42 @@
+name: QA-tool
+run-name: QA-tool is run by ${{ github.actor }}
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Command'
+        required: true
+        default: 'branch-prs-report'
+        type: choice
+        options:
+          - 'branch-prs-report'
+      sourceBranch:
+        description: 'Source branch'
+        required: true
+        default: 'dev'
+      targetBranch:
+        description: 'Target branch'
+        required: true
+        default: 'stg'
+      isSimpleReport:
+        description: 'simple report without details'
+        required: true
+        default: 'false'
+        type: boolean
+
+jobs:
+  qa-tool:
+    runs-on: ubuntu-latest
+    # will add later
+    # permissions:
+    #   contents: read
+    steps:
+      - name: logs
+        run: |
+          echo "Running QA-tool"
+          echo "event: ${{ github.event }}"
+          echo "Command: ${{ github.event.inputs.command }}"
+          echo "Source branch: ${{ github.event.inputs.sourceBranch }}"
+          echo "Target branch: ${{ github.event.inputs.targetBranch }}"
+          echo "isSimpleReport: ${{ github.event.inputs.isSimpleReport }}"
+          echo "secret: ${{ secrets }}"
