@@ -60,11 +60,12 @@ export const extractPRDetails = (prTemplate: string) => {
 
 /**
  * Function to write content to a file.
+ * Creates the file if it does not exist.
  * @returns true if the file was written successfully, false otherwise
  */
 export const writeOnFile = async (path: string, content: string): Promise<boolean> => { 
   try {
-    await fsp.writeFile(path, content, 'utf8');
+    await fsp.writeFile(path, content, { flag: 'w', encoding: 'utf8' });
     return true;
   } catch (error) {
     console.error('Failed to write file:', error);
