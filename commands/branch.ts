@@ -33,6 +33,18 @@ type Commit = { hash: string, message: string };
  * ```
  */
 async function listCommitsNotInBranch(sourceBranch: string, targetBranch: string): Promise<Commit[]> {
+  /*
+    Fetch the latest commits from the remote repository
+    to ensure the local repository is up-to-date.
+    This is necessary to get the latest commits from the remote repository
+    and avoid missing any commits in the local repository.
+  */
+  await execAsync(`git fetch origin ${sourceBranch} ${targetBranch}`);
+  await execAsync(`git switch ${sourceBranch}`);
+  await execAsync(`git pull origin ${sourceBranch}`);
+  await execAsync(`git switch ${targetBranch}`);
+  await execAsync(`git pull origin ${targetBranch}`);
+
   const cmd = `git log --oneline ${targetBranch}..${sourceBranch}`;
   const { stdout } = await execAsync(cmd);
 
