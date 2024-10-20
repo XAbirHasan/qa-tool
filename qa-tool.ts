@@ -32,7 +32,8 @@ async function main(args: string[]): Promise<void> {
   await commandFn(args.slice(1));
 }
 
-main(process.argv.slice(2)).catch(err => {
+main(process.argv.slice(2))
+  .catch(err => {
   console.error('qa-tool error:', JSON.stringify(err, null, 2));
   exit(1);
 });
