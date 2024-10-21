@@ -62,6 +62,8 @@ jobs:
       # Checkout the repository: need to access the repository
       - name: 'deps: Checkout install'
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch all history: required to access the pull requests
 
       - name: Node.js setup
         uses: actions/setup-node@v4
