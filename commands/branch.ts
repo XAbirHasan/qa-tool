@@ -40,12 +40,9 @@ async function listCommitsNotInBranch(sourceBranch: string, targetBranch: string
     and avoid missing any commits in the local repository.
   */
   await execAsync(`git fetch origin ${sourceBranch} ${targetBranch}`);
-  await execAsync(`git switch ${sourceBranch}`);
-  await execAsync(`git pull origin ${sourceBranch}`);
-  await execAsync(`git switch ${targetBranch}`);
-  await execAsync(`git pull origin ${targetBranch}`);
-
-  const cmd = `git log --oneline ${targetBranch}..${sourceBranch}`;
+  // origin/sourceBranch..origin/targetBranch => Commits in sourceBranch that are not in targetBranch
+  // origin is necessary to specify the remote repository
+  const cmd = `git log --oneline origin/${targetBranch}..origin/${sourceBranch}`;
   const { stdout } = await execAsync(cmd);
 
   return stdout.split('\n')
